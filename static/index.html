@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA Encryption and Decryption</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url('bg.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .main-container {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            height: 90%;
+        }
+
+        .container {
+            width: 48%;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 20px;
+            resize: none;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .copy-button {
+            width: auto;
+            padding: 5px 10px;
+            font-size: 14px;
+            align-self: flex-end;
+        }
+
+        .output {
+            background-color: #f1f1f1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            height: 100px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="container encryption">
+            <h2>Encrypt Message</h2>
+            <textarea id="encrypt-input" placeholder="Enter message to encrypt"></textarea>
+            <button onclick="encryptMessage()">Encrypt</button>
+            <div id="encrypted-output" class="output">
+                <div id="encrypted-message"></div>
+                <button class="copy-button" onclick="copyToClipboard('encrypted-message')">Copy</button>
+            </div>
+        </div>
+
+        <div class="container decryption">
+            <h2>Decrypt Message</h2>
+            <textarea id="decrypt-input" placeholder="Enter encrypted message (Base64)"></textarea>
+            <button onclick="decryptMessage()">Decrypt</button>
+            <div id="decrypted-output" class="output">
+                <div id="decrypted-message"></div>
+                <button class="copy-button" onclick="copyToClipboard('decrypted-message')">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function encryptMessage() {
+            const message = document.getElementById('encrypt-input').value;
+
+            if (!message.trim()) {
+                document.getElementById('encrypted-message').textContent = 'Please enter a message to encrypt.';
+                return;
+            }
+
+            try {
+                const response = await fetch('/encrypt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('encrypted-message').textContent = result.encrypted_message;
+                } else {
+                    document.getElementById('encrypted-message').textContent = 'Error during encryption: ' + result.error;
+                }
+            } catch (error) {
+                document.getElementById('encrypted-message').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function decryptMessage() {
+            const encryptedMessage = document.getElementById('decrypt-input').value;
+
+            if (!encryptedMessage.trim()) {
+                document.getElementById('decrypted-message').textContent = 'Please enter an encrypted message to decrypt.';
+                return;
+            }
+
+            try {
+                const response = await fetch('/decrypt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ encrypted_message: encryptedMessage })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('decrypted-message').textContent = result.decrypted_message;
+                } else {
+                    document.getElementById('decrypted-message').textContent = 'Error during decryption: ' + result.error;
+                }
+            } catch (error) {
+                document.getElementById('decrypted-message').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        function copyToClipboard(messageId) {
+            const messageElement = document.getElementById(messageId);
+            const textToCopy = messageElement.textContent;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+            });
+        }
+    </script>
+
+</body>
+</html>
